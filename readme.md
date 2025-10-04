@@ -1,4 +1,5 @@
 Deployed Project Link: https://ml-ai-use-case-agent-pcgvzbfrs4r9rz3zqo5wbd.streamlit.app/
+There is limit to the api request so the app might go down after fixed number of tries,after sometime it will be reboot itself and be awake.
 
 AI/ML Research Agent
 This Streamlit application helps you discover AI/ML use cases to accelerate a company's growth. Enter a company name, and the agent will generate a report with a company overview, top 5 AI/ML use case recommendations, and relevant learning resources.
