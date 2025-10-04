@@ -32,38 +32,34 @@ def search_google(company_name):
         response.raise_for_status()
         return response.json().get('items', []), None
     except requests.exceptions.RequestException as e:
-        error_message = f"Error during Google search: {e}"
-        print(error_message)
-        return [], error_message
+        return [], f"Error during Google search: {e}"
 
 def parse_website(url):
     try:
         response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
         response.raise_for_status()
         soup = BeautifulSoup(response.content, 'html.parser')
-        for script_or_style in soup(['script', 'style', 'header', 'footer', 'nav', 'aside']):
-            script_or_style.decompose()
+        for tag in soup(['script', 'style', 'header', 'footer', 'nav', 'aside']):
+            tag.decompose()
         text = soup.get_text(separator=' ', strip=True)
         return ' '.join(text.split())[:4000], None
     except requests.exceptions.RequestException as e:
-        error_message = f"Error parsing website {url}: {e}"
-        print(error_message)
-        return None, error_message
+        return None, f"Error parsing website {url}: {e}"
 
 def generate_use_cases_with_gemini(company_name, company_info):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
     prompt = f"""
-    Based on the information about {company_name}, generate a report for a technical audience.
+    Analyze the following information for {company_name} and generate a report for a technical audience.
     Company Information: "{company_info}"
 
     The report must contain:
-    1. A brief, one-paragraph overview of the company's business model.
-    2. A list of 5 AI/ML use cases. For each use case, provide:
-       - A 'heading'.
-       - A 'description'.
-       - A list of 'implementation_steps' as a technical guide.
+    1.  A concise, one-paragraph overview of the company's business model.
+    2.  A list of exactly 5 high-impact AI/ML use cases. For each use case, provide:
+        - A 'heading'.
+        - A detailed 'description'.
+        - A list of actionable 'implementation_steps' as a technical guide.
 
-    Return the output ONLY in this exact JSON format:
+    Return the output ONLY in this exact JSON format, with no extra text or markdown:
     {{
       "overview": "...",
       "use_cases": [
@@ -75,54 +71,40 @@ def generate_use_cases_with_gemini(company_name, company_info):
     """
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
     try:
-        response = requests.post(url, json=payload, timeout=60)
+        response = requests.post(url, json=payload, timeout=90)
         response.raise_for_status()
         full_data = response.json()
-        # More robust parsing of the Gemini response
-        try:
-            json_str = full_data['candidates'][0]['content']['parts'][0]['text']
-            # Clean potential markdown formatting from the JSON string
-            clean_json_str = json_str.strip().replace("```json", "").replace("```", "")
-            return json.loads(clean_json_str), None
-        except (KeyError, IndexError, json.JSONDecodeError) as parse_error:
-            error_message = f"Could not parse JSON from Gemini response: {parse_error}. Raw response: {full_data}"
-            print(error_message)
-            return {}, error_message
-            
-    except (requests.exceptions.RequestException, json.JSONDecodeError, KeyError) as e:
-        error_message = f"Error interacting with Gemini API: {e}. Response: {response.text if 'response' in locals() else 'No response'}"
-        print(error_message)
-        return {}, error_message
+        json_str = full_data['candidates'][0]['content']['parts'][0]['text']
+        clean_json_str = json_str.strip().replace("```json", "").replace("```", "")
+        return json.loads(clean_json_str), None
+    except (requests.RequestException, json.JSONDecodeError, KeyError, IndexError) as e:
+        return {}, f"Error with Gemini API: {e}. Response: {response.text if 'response' in locals() else 'No API response'}"
 
 def process_company_request(company_name):
+    """
+    Main orchestrator function. It now returns the full data structure for UI display.
+    """
     search_results, error = search_google(company_name)
-    if error:
-        return None, None, error
-    if not search_results:
-        return None, None, "Could not find any information about the company. Please try a different name."
+    if error: return None, None, None, None, error
+    if not search_results: return None, None, None, None, "Could not find any info for the company."
 
     company_info = ""
     for result in search_results:
         content, error = parse_website(result['link'])
-        if error:
-            print(f"Skipping a link due to parsing error: {error}") # Log but don't stop
-        if content:
-            company_info += content + " "
-    
-    if not company_info:
-        return None, None, "Could not parse content from any of the found websites. They may be blocking scrapers."
+        if content: company_info += content + " "
+
+    if not company_info: return None, None, None, None, "Could not parse websites; they may block scrapers."
 
     use_cases_data, error = generate_use_cases_with_gemini(company_name, company_info)
-    if error:
-        return None, None, error
+    if error: return None, None, None, None, error
     if not use_cases_data or 'use_cases' not in use_cases_data:
-        return None, None, "The AI model returned an unexpected format. Could not extract use cases."
+        return None, None, None, None, "AI model returned an unexpected format."
 
+    overview = use_cases_data.get('overview', 'No overview generated.')
     formatted_use_cases = []
     for case in use_cases_data.get('use_cases', []):
         heading = case.get('heading', 'No heading')
         search_query = f"{company_name} {heading}"
-        
         formatted_use_cases.append({
             "heading": heading,
             "description": case.get('description', ''),
@@ -132,12 +114,9 @@ def process_company_request(company_name):
             "papers": find_arxiv_papers(search_query)
         })
 
-    pdf_bytes = create_pdf(
-        company_name,
-        use_cases_data.get('overview', 'No overview generated.'),
-        formatted_use_cases
-    )
-    
+    pdf_bytes = create_pdf(company_name, overview, formatted_use_cases)
     pdf_filename = f"{company_name.replace(' ', '_')}_AI_ML_Report.pdf"
-    return pdf_bytes, pdf_filename, None
+    
+    # Return all data for the UI
+    return overview, formatted_use_cases, pdf_bytes, pdf_filename, None
 
