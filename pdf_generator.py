@@ -57,7 +57,8 @@ def create_pdf(company_name, overview, use_cases):
         pdf.set_font("Arial", 'B', 12)
         pdf.multi_cell(0, 5, "Implementation Steps:")
         for step in case.get('implementation_steps', []):
-             write_text(pdf, f"  •  {step.replace('**', '')}")
+             # Replaced the special bullet character with a standard hyphen
+             write_text(pdf, f"  -  {step.replace('**', '')}")
         
         # Resources
         pdf.set_font("Arial", 'B', 12)
@@ -67,17 +68,20 @@ def create_pdf(company_name, overview, use_cases):
         pdf.set_text_color(0, 0, 139) # Dark Blue for links
         if case['datasets']:
             for ds in case['datasets']:
-                write_text(pdf, f"  • [Dataset] {ds['title']}: {ds['url']}", size=10)
+                # Replaced the special bullet character with a standard hyphen
+                write_text(pdf, f"  - [Dataset] {ds['title']}: {ds['url']}", size=10)
         
         # Repositories
         if case['repos']:
             for repo in case['repos']:
-                write_text(pdf, f"  • [Repo] {repo['name']} (Stars: {repo['stars']}): {repo['url']}", size=10)
+                # Replaced the special bullet character with a standard hyphen
+                write_text(pdf, f"  - [Repo] {repo['name']} (Stars: {repo['stars']}): {repo['url']}", size=10)
             
         # Papers
         if case['papers']:
             for paper in case['papers']:
-                write_text(pdf, f"  • [Paper] {paper['title']}: {paper['url']}", size=10)
+                # Replaced the special bullet character with a standard hyphen
+                write_text(pdf, f"  - [Paper] {paper['title']}: {paper['url']}", size=10)
         
         pdf.set_text_color(0, 0, 0) # Reset text color
         pdf.ln(10)
