@@ -1,66 +1,82 @@
+Deployed Project Link: https://ml-ai-use-case-agent-pcgvzbfrs4r9rz3zqo5wbd.streamlit.app/
+
 AI/ML Research Agent
-This Streamlit application takes a company name, researches it, and generates a PDF report with the top 5 AI/ML use cases that could help the company's growth. It also finds relevant datasets, GitHub repositories, and research papers for each use case.
+This Streamlit application helps you discover AI/ML use cases to accelerate a company's growth. Enter a company name, and the agent will generate a report with a company overview, top 5 AI/ML use case recommendations, and relevant learning resources.
 
-1. Project Structure
-(No changes to the project structure)
+⚙️ Local Setup Instructions
+1. Clone the Repository
+Clone this project to your local machine.
 
-2. Local Setup
-Step 1 & 2: Clone and Install
-(No changes to these steps)
+2. Install Dependencies
+Navigate to the project directory and install the required Python packages:
 
-Step 3: Get Your API Keys
-You will need credentials for Google, Gemini, Kaggle, and GitHub.
+pip install -r requirements.txt
 
-A. Google API Key & Custom Search Engine (CSE) ID
+3. Create a Secrets File
+Streamlit uses a specific file to manage secret keys locally. Create a new folder named .streamlit in your main project directory. Inside this new folder, create a file named secrets.toml.
 
-Follow the original instructions to get these two keys from the Google Cloud Console.
+Your project structure should look like this:
 
-B. Gemini API Key
+- Research_agent/
+  - .streamlit/
+    - secrets.toml
+  - app.py
+  - utils.py
+  - pdf_generator.py
+  - ... (other .py files)
+  - requirements.txt
 
-Get this from Google AI Studio.
-
-C. Kaggle API Key
-
-Log into your Kaggle account. Go to https://www.kaggle.com/YOUR_USERNAME/account.
-
-In the API section, click Create New API Token.
-
-This downloads a kaggle.json file. Open it to find your username and key.
-
-D. GitHub Personal Access Token (Recommended)
-
-Go to your GitHub account settings.
-
-Navigate to Developer settings > Personal access tokens > Tokens (classic).
-
-Click Generate new token and select Generate new token (classic).
-
-Give it a descriptive name (e.g., "ResearchAgent").
-
-Set an expiration date (e.g., 90 days).
-
-Under Select scopes, check the box for public_repo. This is all that's needed.
-
-Click Generate token at the bottom and copy the token immediately. You won't be able to see it again.
-
-Step 4: Create and Populate the secrets.toml File
-Create the .streamlit/secrets.toml file and add all your keys. It is very important that the names match exactly.
+4. Add Your API Keys
+Open the secrets.toml file and add your API keys in the following format. Do not use quotes around the keys.
 
 # .streamlit/secrets.toml
 
-# Google Custom Search
-GOOGLE_API_KEY = "PASTE_YOUR_GOOGLE_API_KEY_HERE"
-GOOGLE_CSE_ID = "PASTE_YOUR_CSE_ID_HERE"
+# Google API Keys (for company search)
+GOOGLE_API_KEY = "YOUR_GOOGLE_API_KEY_HERE"
+GOOGLE_CSE_ID = "YOUR_GOOGLE_CUSTOM_SEARCH_ENGINE_ID_HERE"
 
-# Google Gemini
-GEMINI_API_KEY = "PASTE_YOUR_GEMINI_API_KEY_HERE"
+# Gemini API Key (for generating use cases)
+GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"
 
-# Kaggle API (from your kaggle.json file)
-KAGGLE_USERNAME = "PASTE_YOUR_KAGGLE_USERNAME_HERE"
-KAGGLE_KEY = "PASTE_YOUR_KAGGLE_KEY_HERE"
+# GitHub API Key (for finding repositories)
+GITHUB_API_KEY = "YOUR_GITHUB_PERSONAL_ACCESS_TOKEN_HERE"
 
-# GitHub API (Personal Access Token)
-GITHUB_API_KEY = "PASTE_YOUR_GITHUB_TOKEN_HERE"
+# Kaggle API Credentials (for finding datasets)
+KAGGLE_USERNAME = "YOUR_KAGGLE_USERNAME"
+KAGGLE_KEY = "YOUR_KAGGLE_API_KEY"
 
-Step 5: Run the Application
-(No changes to this step)
+5. Run the Application
+Open your terminal in the project's root directory and run the following command:
+
+streamlit run app.py
+
+☁️ Deployment to Streamlit Community Cloud
+1. Prerequisites
+GitHub Account: You need a GitHub account.
+
+Push Project to GitHub: Create a new repository on GitHub and push all your project files (app.py, utils.py, requirements.txt, etc.) to it. Do not push your secrets.toml file.
+
+2. Deployment Steps
+Sign up/in: Go to Streamlit Community Cloud and sign up or log in with your GitHub account.
+
+New App: Click the "New app" button from your workspace.
+
+Configure Deployment:
+
+Repository: Select the GitHub repository where you pushed your project.
+
+Branch: Select the main branch.
+
+Main file path: Ensure this is set to app.py.
+
+App URL: Give your app a custom URL.
+
+Add Secrets: Before you deploy, you must add your API keys to the Streamlit Cloud environment.
+
+Click on the "Advanced settings..." dropdown.
+
+In the "Secrets" section, copy and paste the entire content of your local secrets.toml file.
+
+Deploy: Click the "Deploy!" button. Streamlit will build and launch your application.
+
+Your research agent will now be live and accessible to anyone with the URL.
