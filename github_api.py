@@ -15,18 +15,17 @@ else:
     GITHUB_API_KEY = os.getenv("GITHUB_API_KEY")
 
 def _extract_keywords(query_string):
-    """Extracts relevant keywords from a long query string for better search results."""
-    stop_words = set([
-        'a', 'an', 'the', 'in', 'on', 'for', 'with', 'of', 'and', 'to', 'from',
-        'implement', 'using', 'model', 'system', 'solution', 'leverage', 'optimize',
-        'enhance', 'develop', 'create', 'build', 'drive', 'growth', 'business',
-        'products', 'about', 'recommendations', 'top', 'impactful'
-    ])
+    """Extracts relevant keywords from a long query string for a lenient search."""
+    # Drastically reduced stop words for a more lenient search
+    stop_words = set(['a', 'an', 'the', 'in', 'on', 'for', 'with', 'of', 'and', 'to', 'from', 'using'])
     
     clean_query = ''.join(c for c in query_string if c.isalnum() or c.isspace()).lower()
     words = clean_query.split()
-    keywords = [word for word in words if word not in stop_words and len(word) > 2]
-    return ' '.join(list(dict.fromkeys(keywords))) # Remove duplicates while preserving order
+    # Lowered character limit to include more potential keywords
+    keywords = [word for word in words if word not in stop_words and len(word) > 1]
+    
+    # Using " OR " (must be capitalized) makes the search much more lenient
+    return ' OR '.join(list(dict.fromkeys(keywords)))
 
 def find_github_repos(heading):
     """Finds top GitHub repositories based on extracted keywords from the use case heading."""
@@ -35,7 +34,11 @@ def find_github_repos(heading):
         return []
 
     search_query = _extract_keywords(heading)
-    print(f"Searching GitHub with refined query: '{search_query}'")
+    # If the query is empty after filtering, fall back to a general search term
+    if not search_query.strip():
+        search_query = "machine learning"
+        
+    print(f"Searching GitHub with lenient query: '{search_query}'")
     
     url = "https://api.github.com/search/repositories"
     headers = {'Authorization': f'token {GITHUB_API_KEY}'}
